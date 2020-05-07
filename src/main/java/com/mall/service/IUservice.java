@@ -17,4 +17,6 @@ public interface IUservice {
 
     ServerResponse<String> forgetRestPassword(String username, String passwordNew, String forgetToken);
 
+    ServerResponse<String> restPassword(String passwordNew, String passwordOld, User user);
+
 }

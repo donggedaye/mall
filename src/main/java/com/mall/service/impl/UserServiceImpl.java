@@ -135,4 +135,36 @@ public class UserServiceImpl implements IUservice {
         return ServerResponse.createByErrorMessage("修改密码失败");
     }
 
-}
+    @Override
+    public ServerResponse<String> restPassword(String passwordNew, String passwordOld, User user) {
+        //防止横向越权，要校验用户旧密码，一定是要指定这个用户，因为我会查询count（1）,如果不指定id，那么结果就是true，count>0
+        int i = userMapper.checkPassword(MD5Util.MD5EncodeUtf8(passwordOld), user.getId());
+        if (i == 0) {
+            return ServerResponse.createByErrorMessage("旧密码错误");
+        }
+
+        user.setPassword(MD5Util.MD5EncodeUtf8(passwordNew));
+        int userUpdate = userMapper.updateByPrimaryKeySelective(user);
+        if (userUpdate > 0) {
+            return ServerResponse.createBySuccessMessage("用户密码更新成功");
+        }
+        return ServerResponse.createByErrorMessage("用户密码更新失败");
+    }
+
+    public ServerResponse<User> updateInformation(User user) {
+        //email要进行校验，校验新的email是不是已经存在，并且存在的email如果相同的话，不能是我们当前用户的
+        int i = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
+        if(i > 0){
+            return ServerResponse.createByErrorMessage("当前邮箱存在，请换一个");
+        }
+        User userUpdate = new User();
+        userUpdate.setId(user.getId());
+        userUpdate.setEmail(user.getEmail());
+        userUpdate.setPhone(user.getPhone());
+        userUpdate.setQuestion(user.getQuestion());
+        userUpdate.setAnswer(user.getAnswer());
+
+        int count = userMapper.updateByPrimaryKeySelective(userUpdate);
+        return null;
+    }
+    }

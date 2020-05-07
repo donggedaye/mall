@@ -118,11 +118,42 @@ public class UserController {
     }
 
     /**
-     * 密码重置
+     * 忘记密码
+     *
+     * @param username
+     * @param passwordNew
+     * @param forgetToken
+     * @return
      */
     @ResponseBody
-    @RequestMapping(value ="forget_reset_password.do", method = RequestMethod.GET)
+    @RequestMapping(value = "forget_reset_password.do", method = RequestMethod.GET)
     public ServerResponse<String> forgetRestPassword(String username, String passwordNew, String forgetToken) {
         return iUservice.forgetRestPassword(username, passwordNew, forgetToken);
+    }
+
+    /**
+     * 密码重置
+     *
+     * @param session
+     * @param passwordNew
+     * @param passwordOld
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "reset_password.do", method = RequestMethod.POST)
+    public ServerResponse<String> resetPassword(HttpSession session, String passwordNew,  String passwordOld) {
+        User attribute = (User) session.getAttribute(Const.CURRENT_USER);
+        if (ObjectUtils.isEmpty(attribute)) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+        return iUservice.restPassword(passwordNew, passwordOld, attribute);
+    }
+
+    public ServerResponse<User> updateInformation(HttpSession session, User user) {
+        User attribute = (User) session.getAttribute(Const.CURRENT_USER);
+        if (ObjectUtils.isEmpty(attribute)) {
+            return ServerResponse.createByErrorMessage("用户未登录");
+        }
+        return null;
     }
 }
