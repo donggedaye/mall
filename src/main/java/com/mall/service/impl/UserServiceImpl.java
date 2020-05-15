@@ -151,10 +151,11 @@ public class UserServiceImpl implements IUservice {
         return ServerResponse.createByErrorMessage("用户密码更新失败");
     }
 
+    @Override
     public ServerResponse<User> updateInformation(User user) {
         //email要进行校验，校验新的email是不是已经存在，并且存在的email如果相同的话，不能是我们当前用户的
         int i = userMapper.checkEmailByUserId(user.getEmail(), user.getId());
-        if(i > 0){
+        if (i > 0) {
             return ServerResponse.createByErrorMessage("当前邮箱存在，请换一个");
         }
         User userUpdate = new User();
@@ -165,6 +166,19 @@ public class UserServiceImpl implements IUservice {
         userUpdate.setAnswer(user.getAnswer());
 
         int count = userMapper.updateByPrimaryKeySelective(userUpdate);
-        return null;
+        if (count > 0) {
+            return ServerResponse.createBySuccessMessage("更新信息成功");
+        }
+        return ServerResponse.createByErrorMessage("更新信息失败");
     }
+
+    @Override
+    public ServerResponse<User> getInformation(Integer userId) {
+        User user = userMapper.selectByPrimaryKey(userId);
+        if (ObjectUtils.isEmpty(user)) {
+            return ServerResponse.createByErrorMessage("找不到当前用户");
+        }
+        user.setPassword(org.apache.commons.lang3.StringUtils.EMPTY);
+        return ServerResponse.createBySuccess(user);
     }
+}

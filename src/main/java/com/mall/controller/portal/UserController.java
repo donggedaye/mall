@@ -1,6 +1,7 @@
-package com.mall.controller;
+package com.mall.controller.portal;
 
 import com.mall.common.Const;
+import com.mall.common.ResponseCode;
 import com.mall.common.ServerResponse;
 import com.mall.pojo.User;
 import com.mall.service.IUservice;
@@ -49,7 +50,7 @@ public class UserController {
      * @return
      */
     @ResponseBody
-    @RequestMapping(value = "logout.do", method = RequestMethod.GET)
+    @RequestMapping(value = "logout.do", method = RequestMethod.POST)
     public ServerResponse<String> logout(HttpSession httpSession) {
         httpSession.removeAttribute(Const.CURRENT_USER);
         return ServerResponse.createBySuccess();
@@ -61,7 +62,7 @@ public class UserController {
      * @param user
      */
     @ResponseBody
-    @RequestMapping(value = "register.do", method = RequestMethod.GET)
+    @RequestMapping(value = "register.do", method = RequestMethod.POST)
     public ServerResponse<String> register(User user) {
         return iUservice.register(user);
     }
@@ -73,7 +74,7 @@ public class UserController {
      * @param type
      */
     @ResponseBody
-    @RequestMapping(value = "check_valid.do", method = RequestMethod.GET)
+    @RequestMapping(value = "check_valid.do", method = RequestMethod.POST)
     public ServerResponse<String> checkValid(String str, String type) {
         return iUservice.checkValid(str, type);
     }
@@ -84,7 +85,7 @@ public class UserController {
      * @param session
      */
     @ResponseBody
-    @RequestMapping(value = "get_user_info.do", method = RequestMethod.GET)
+    @RequestMapping(value = "get_user_info.do", method = RequestMethod.POST)
     public ServerResponse<User> getUserInfo(HttpSession session) {
         User attribute = (User) session.getAttribute(Const.CURRENT_USER);
         if (ObjectUtils.isNotEmpty(attribute)) {
@@ -99,7 +100,7 @@ public class UserController {
      * @param username
      */
     @ResponseBody
-    @RequestMapping(value = "forget_get_question.do", method = RequestMethod.GET)
+    @RequestMapping(value = "forget_get_question.do", method = RequestMethod.POST)
     public ServerResponse<String> forgetGetQuestion(String username) {
         return iUservice.selectQuestion(username);
     }
@@ -112,7 +113,7 @@ public class UserController {
      * @param answer
      */
     @ResponseBody
-    @RequestMapping(value = "forget_check_answer.do", method = RequestMethod.GET)
+    @RequestMapping(value = "forget_check_answer.do", method = RequestMethod.POST)
     public ServerResponse<String> forgetCheckAnswer(String username, String question, String answer) {
         return iUservice.checkAnswer(username, question, answer);
     }
@@ -126,7 +127,7 @@ public class UserController {
      * @return
      */
     @ResponseBody
-    @RequestMapping(value = "forget_reset_password.do", method = RequestMethod.GET)
+    @RequestMapping(value = "forget_reset_password.do", method = RequestMethod.POST)
     public ServerResponse<String> forgetRestPassword(String username, String passwordNew, String forgetToken) {
         return iUservice.forgetRestPassword(username, passwordNew, forgetToken);
     }
@@ -141,7 +142,7 @@ public class UserController {
      */
     @ResponseBody
     @RequestMapping(value = "reset_password.do", method = RequestMethod.POST)
-    public ServerResponse<String> resetPassword(HttpSession session, String passwordNew,  String passwordOld) {
+    public ServerResponse<String> resetPassword(HttpSession session, String passwordNew, String passwordOld) {
         User attribute = (User) session.getAttribute(Const.CURRENT_USER);
         if (ObjectUtils.isEmpty(attribute)) {
             return ServerResponse.createByErrorMessage("用户未登录");
@@ -149,11 +150,43 @@ public class UserController {
         return iUservice.restPassword(passwordNew, passwordOld, attribute);
     }
 
+    /**
+     * 更新用户信息
+     *
+     * @param session
+     * @param user
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "update_information.do", method = RequestMethod.POST)
     public ServerResponse<User> updateInformation(HttpSession session, User user) {
         User attribute = (User) session.getAttribute(Const.CURRENT_USER);
         if (ObjectUtils.isEmpty(attribute)) {
             return ServerResponse.createByErrorMessage("用户未登录");
         }
-        return null;
+        user.setId(attribute.getId());
+        user.setUsername(attribute.getUsername());
+        ServerResponse<User> userServerResponse = iUservice.updateInformation(user);
+        if (userServerResponse.isSuccess()) {
+            userServerResponse.getData().setUsername(attribute.getUsername());
+            session.setAttribute(Const.CURRENT_USER, userServerResponse.getData());
+        }
+        return userServerResponse;
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @param session
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "get_information.do", method = RequestMethod.POST)
+    public ServerResponse<User> getInformation(HttpSession session) {
+        User attribute = (User) session.getAttribute(Const.CURRENT_USER);
+        if (ObjectUtils.isEmpty(attribute)) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "未登录");
+        }
+        return iUservice.getInformation(attribute.getId());
     }
 }
